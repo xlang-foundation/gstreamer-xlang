@@ -2159,6 +2159,18 @@ ges_timeline_get_smart_rendering (GESTimeline * timeline)
   return timeline->priv->rendering_smartly;
 }
 
+GstStreamCollection *
+ges_timeline_get_stream_collection (GESTimeline * timeline)
+{
+  return gst_object_ref (timeline->priv->stream_collection);
+}
+
+gboolean
+ges_timeline_in_current_thread (GESTimeline * timeline)
+{
+  return timeline->priv->valid_thread == g_thread_self ();
+}
+
 /**** API *****/
 /**
  * ges_timeline_new:

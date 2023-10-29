@@ -81,6 +81,8 @@ va_create_surfaces (GstVaDisplay * display, guint rt_format, guint fourcc,
   guint num_attrs = 2;
 
   g_return_val_if_fail (num_surfaces > 0, FALSE);
+  /* must have modifiers when num_modifiers > 0 */
+  g_return_val_if_fail (num_modifiers == 0 || modifiers, FALSE);
 
   if (fourcc > 0) {
     /* *INDENT-OFF* */
@@ -115,8 +117,24 @@ va_create_surfaces (GstVaDisplay * display, guint rt_format, guint fourcc,
     /* *INDENT-ON* */
   }
 
+retry:
   status = vaCreateSurfaces (dpy, rt_format, width, height, surfaces,
       num_surfaces, attrs, num_attrs);
+
+  if (status == VA_STATUS_ERROR_ATTR_NOT_SUPPORTED
+      && attrs[num_attrs - 1].type == VASurfaceAttribDRMFormatModifiers) {
+    int i;
+
+    /* if requested modifiers contain linear, let's remove the attribute and
+     * "hope" the driver will create linear dmabufs */
+    for (i = 0; i < num_modifiers; ++i) {
+      if (modifiers[i] == DRM_FORMAT_MOD_LINEAR) {
+        num_attrs--;
+        goto retry;
+      }
+    }
+  }
+
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR ("vaCreateSurfaces: %s", vaErrorStr (status));
     return FALSE;
@@ -224,12 +242,22 @@ va_sync_surface (GstVaDisplay * display, VASurfaceID surface)
 }
 
 gboolean
-va_map_buffer (GstVaDisplay * display, VABufferID buffer, gpointer * data)
+va_map_buffer (GstVaDisplay * display, VABufferID buffer, GstMapFlags flags,
+    gpointer * data)
 {
   VADisplay dpy = gst_va_display_get_va_dpy (display);
   VAStatus status;
 
+#if VA_CHECK_VERSION(1, 21, 0)
+  uint32_t vaflags = 0;
+  if (flags & GST_MAP_READ)
+    vaflags |= VA_MAPBUFFER_FLAG_READ;
+  if (flags & GST_MAP_WRITE)
+    vaflags |= VA_MAPBUFFER_FLAG_WRITE;
+  status = vaMapBuffer2 (dpy, buffer, data, vaflags);
+#else
   status = vaMapBuffer (dpy, buffer, data);
+#endif
   if (status != VA_STATUS_SUCCESS) {
     GST_WARNING ("vaMapBuffer: %s", vaErrorStr (status));
     return FALSE;
@@ -340,4 +368,38 @@ va_copy_surface (GstVaDisplay * display, VASurfaceID dst, VASurfaceID src)
     return FALSE;
   }
   return TRUE;
+}
+
+guint
+va_get_surface_usage_hint (GstVaDisplay * display, VAEntrypoint entrypoint,
+    GstPadDirection dir, gboolean is_dma)
+{
+  switch (entrypoint) {
+    case VAEntrypointVideoProc:{
+      /* For DMA kind caps, we use VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ |
+         VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE to detect the modifiers.
+         And in runtime, we should use the same flags in order to keep
+         the same modifiers. */
+      if (is_dma)
+        return VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ |
+            VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE;
+
+      if (dir == GST_PAD_SINK)
+        return VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ;
+      else if (dir == GST_PAD_SRC)
+        return VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE;
+
+      break;
+    }
+    case VAEntrypointVLD:
+      return VA_SURFACE_ATTRIB_USAGE_HINT_DECODER;
+    case VAEntrypointEncSlice:
+    case VAEntrypointEncSliceLP:
+    case VAEntrypointEncPicture:
+      return VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER;
+    default:
+      break;
+  }
+
+  return VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
 }

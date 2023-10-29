@@ -104,6 +104,7 @@ base_tests = [
   [['libs/vkinstance.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/vkimagebufferpool.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/d3d11device.cpp'], not gstd3d11_dep.found(), [gstd3d11_dep]],
+  [['libs/d3d11memory.c'], not gstd3d11_dep.found(), [gstd3d11_dep]],
   [['libs/cudamemory.c'], not gstcuda_dep.found(), [gstcuda_dep, gstcuda_stub_dep]],
 ]
 
@@ -139,8 +140,6 @@ if host_machine.system() != 'windows'
     [['elements/jifmux.c'],
         not exif_dep.found() or not cdata.has('HAVE_UNISTD_H'), [exif_dep]],
     [['elements/jpegparse.c'], not cdata.has('HAVE_UNISTD_H')],
-    [['elements/kate.c'],
-        not kate_dep.found() or not cdata.has('HAVE_UNISTD_H'), [kate_dep]],
     [['elements/netsim.c']],
     [['elements/shm.c'], not shm_enabled, shm_deps],
     [['elements/voaacenc.c'],
@@ -149,6 +148,7 @@ if host_machine.system() != 'windows'
     [['elements/x265enc.c'], not x265_dep.found(), [x265_dep]],
     [['elements/zbar.c'], not zbar_dep.found(), [zbar_dep]],
     [['elements/zxing.c'], not zxing_dep.found(), [zxing_dep]],
+    [['elements/lc3.c'], not lc3_dep.found(), [lc3_dep]],
   ]
 endif
 
@@ -160,13 +160,14 @@ if host_machine.system() == 'linux'
   ]
 endif
 
+fsmod = import('fs')
 test_defines = [
   '-UG_DISABLE_ASSERT',
   '-UG_DISABLE_CAST_CHECKS',
   '-DGST_CHECK_TEST_ENVIRONMENT_BEACON="GST_STATE_IGNORE_ELEMENTS"',
-  '-DGST_TEST_FILES_PATH="' + meson.current_source_dir() + '/../files"',
-  '-DTEST_PATH="' + meson.current_build_dir() + '/media"',
-  '-DDASH_MPD_DATADIR=' + meson.current_source_dir() + '/elements/dash_mpd_data',
+  '-DGST_TEST_FILES_PATH="' + fsmod.as_posix(meson.current_source_dir()) + '/../files"',
+  '-DTEST_PATH="' + fsmod.as_posix(meson.current_build_dir()) + '/media"',
+  '-DDASH_MPD_DATADIR=' + fsmod.as_posix(meson.current_source_dir()) + '/elements/dash_mpd_data',
   '-DGST_USE_UNSTABLE_API',
 ]
 

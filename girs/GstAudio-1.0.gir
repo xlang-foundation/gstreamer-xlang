@@ -8165,6 +8165,21 @@ be called in when the ringbuffer is acquired.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="set_errored" c:identifier="gst_audio_ring_buffer_set_errored" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.c">Mark the ringbuffer as errored after it has started.
+
+MT safe.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="buf" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.c">the #GstAudioRingBuffer that has encountered an error</doc>
+            <type name="AudioRingBuffer" c:type="GstAudioRingBuffer*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="set_flushing" c:identifier="gst_audio_ring_buffer_set_flushing">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.c">Set the ringbuffer to flushing mode or normal mode.
 
@@ -9695,35 +9710,35 @@ in a more readable fashion.</doc>
     </constant>
     <enumeration name="DsdFormat" version="1.24" glib:type-name="GstDsdFormat" glib:get-type="gst_dsd_format_get_type" c:type="GstDsdFormat">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">Enum value describing how DSD bits are grouped.</doc>
-      <member name="dsd_format_u8" value="0" c:identifier="GST_DSD_FORMAT_U8" glib:nick="dsd-format-u8">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">8 DSD bits in 1 byte</doc>
-      </member>
-      <member name="dsd_format_u16le" value="1" c:identifier="GST_DSD_FORMAT_U16LE" glib:nick="dsd-format-u16le">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">16 DSD bits in 2 bytes, little endian order</doc>
-      </member>
-      <member name="dsd_format_u16be" value="2" c:identifier="GST_DSD_FORMAT_U16BE" glib:nick="dsd-format-u16be">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">16 DSD bits in 2 bytes, big endian order</doc>
-      </member>
-      <member name="dsd_format_u32le" value="3" c:identifier="GST_DSD_FORMAT_U32LE" glib:nick="dsd-format-u32le">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">32 DSD bits in 4 bytes, little endian order</doc>
-      </member>
-      <member name="dsd_format_u32be" value="4" c:identifier="GST_DSD_FORMAT_U32BE" glib:nick="dsd-format-u32be">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">32 DSD bits in 4 bytes, big endian order</doc>
-      </member>
-      <member name="num_dsd_formats" value="5" c:identifier="GST_NUM_DSD_FORMATS" glib:nick="num-dsd-formats">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">number of valid DSD formats</doc>
-      </member>
-      <member name="dsd_format_unknown" value="4294967295" c:identifier="GST_DSD_FORMAT_UNKNOWN" glib:nick="dsd-format-unknown">
+      <member name="dsd_format_unknown" value="0" c:identifier="GST_DSD_FORMAT_UNKNOWN" glib:nick="dsd-format-unknown">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">unknown / invalid DSD format</doc>
       </member>
-      <member name="dsd_format_u16" value="1" c:identifier="GST_DSD_FORMAT_U16" glib:nick="dsd-format-u16">
+      <member name="dsd_format_u8" value="1" c:identifier="GST_DSD_FORMAT_U8" glib:nick="dsd-format-u8">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">8 DSD bits in 1 byte</doc>
+      </member>
+      <member name="dsd_format_u16le" value="2" c:identifier="GST_DSD_FORMAT_U16LE" glib:nick="dsd-format-u16le">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">16 DSD bits in 2 bytes, little endian order</doc>
+      </member>
+      <member name="dsd_format_u16be" value="3" c:identifier="GST_DSD_FORMAT_U16BE" glib:nick="dsd-format-u16be">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">16 DSD bits in 2 bytes, big endian order</doc>
+      </member>
+      <member name="dsd_format_u32le" value="4" c:identifier="GST_DSD_FORMAT_U32LE" glib:nick="dsd-format-u32le">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">32 DSD bits in 4 bytes, little endian order</doc>
+      </member>
+      <member name="dsd_format_u32be" value="5" c:identifier="GST_DSD_FORMAT_U32BE" glib:nick="dsd-format-u32be">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">32 DSD bits in 4 bytes, big endian order</doc>
+      </member>
+      <member name="num_dsd_formats" value="6" c:identifier="GST_NUM_DSD_FORMATS" glib:nick="num-dsd-formats">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">number of valid DSD formats</doc>
+      </member>
+      <member name="dsd_format_u16" value="2" c:identifier="GST_DSD_FORMAT_U16" glib:nick="dsd-format-u16">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">16 DSD bits in 2 bytes, native endianness</doc>
       </member>
-      <member name="dsd_format_u32" value="3" c:identifier="GST_DSD_FORMAT_U32" glib:nick="dsd-format-u32">
+      <member name="dsd_format_u32" value="4" c:identifier="GST_DSD_FORMAT_U32" glib:nick="dsd-format-u32">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">32 DSD bits in 4 bytes, native endianness</doc>
       </member>
       <function name="from_string" c:identifier="gst_dsd_format_from_string" version="1.24">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">Convert the @format string to its #GstDsdFormat.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">Convert the DSD format string @str to its #GstDsdFormat.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">the #GstDsdFormat for @format or GST_DSD_FORMAT_UNKNOWN when the
@@ -9732,6 +9747,7 @@ string is not a known format.</doc>
         </return-value>
         <parameters>
           <parameter name="str" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">a DSD format string</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
@@ -9947,8 +9963,11 @@ Note: This initializes @info first, no values are preserved.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">the number of channels</doc>
             <type name="gint" c:type="gint"/>
           </parameter>
-          <parameter name="positions" transfer-ownership="none">
-            <type name="AudioChannelPosition" c:type="const GstAudioChannelPosition*"/>
+          <parameter name="positions" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">the channel positions</doc>
+            <array zero-terminated="0" c:type="const GstAudioChannelPosition*" fixed-size="64">
+              <type name="AudioChannelPosition" c:type="GstAudioChannelPosition"/>
+            </array>
           </parameter>
         </parameters>
       </method>
@@ -11580,13 +11599,14 @@ are ignored.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Number of channels (must be at least 1)</doc>
           <type name="gint" c:type="gint"/>
         </parameter>
-        <parameter name="reverse_bytes" transfer-ownership="none">
+        <parameter name="reverse_byte_bits" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">If TRUE, reverse the bits in each DSD byte</doc>
           <type name="gboolean" c:type="gboolean"/>
         </parameter>
       </parameters>
     </function>
     <function name="dsd_format_from_string" c:identifier="gst_dsd_format_from_string" moved-to="DsdFormat.from_string" version="1.24">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">Convert the @format string to its #GstDsdFormat.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">Convert the DSD format string @str to its #GstDsdFormat.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">the #GstDsdFormat for @format or GST_DSD_FORMAT_UNKNOWN when the
@@ -11595,6 +11615,7 @@ string is not a known format.</doc>
       </return-value>
       <parameters>
         <parameter name="str" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">a DSD format string</doc>
           <type name="utf8" c:type="const gchar*"/>
         </parameter>
       </parameters>
@@ -11670,6 +11691,16 @@ the #GstDsdFormat if there is one, or NULL otherwise.</doc>
         <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
       </return-value>
     </function>
+    <docsection name="gstaudio">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio.c">This library contains some helper functions for audio elements.</doc>
+    </docsection>
+    <docsection name="gstaudiochannels">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channels.c">This library contains some helper functions for multichannel audio.</doc>
+    </docsection>
+    <docsection name="gstaudioiec61937">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioiec61937.c">This module contains some helper functions for encapsulating various
+audio formats in IEC 61937 headers and padding.</doc>
+    </docsection>
     <function name="stream_volume_convert_volume" c:identifier="gst_stream_volume_convert_volume" moved-to="StreamVolume.convert_volume">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/streamvolume.h"/>
       <return-value transfer-ownership="none">

@@ -69,7 +69,6 @@ option('osxvideo', type : 'feature', value : 'auto', description : 'macOS Cocoa 
 option('png', type : 'feature', value : 'auto', description : 'PNG image codec plugin')
 option('pulse', type : 'feature', value : 'auto', description : 'Pulseaudio audio source/sink plugin')
 option('shout2', type : 'feature', value : 'auto', description : 'Shout-casting network sink plugin based on libshout2')
-option('soup', type : 'feature', value : 'auto', description : 'libsoup HTTP client source/sink plugin')
 option('speex', type : 'feature', value : 'auto', description : 'Speex audio codec plugin')
 option('taglib', type : 'feature', value : 'auto', description : 'Tag-writing plugin based on taglib')
 option('twolame', type : 'feature', value : 'auto', description : 'twolame mp2 audio encoder plugin')
@@ -86,6 +85,11 @@ option('rpicamsrc', type : 'feature', value : 'auto', description : 'Raspberry P
 option('rpi-header-dir', type : 'string', value : '/opt/vc/include', description : 'Directory where VideoCore/MMAL headers and bcm_host.h can be found')
 option('rpi-lib-dir', type : 'string', value : '/opt/vc/lib', description : 'Directory where VideoCore/MMAL libraries can be found')
 
+# soup plugin options
+option('soup', type : 'feature', value : 'auto', description : 'libsoup HTTP client source/sink plugin')
+option('soup-lookup-dep', type : 'boolean', value : 'false',
+       description : 'Lookup libsoup dep at build time even when building a shared plugin')
+
 # Qt plugin options
 option('qt-method', type: 'combo', value: 'auto', choices: ['auto', 'pkg-config', 'qmake'],
        description: 'Method to use to find Qt')
@@ -100,6 +104,7 @@ option('ximagesrc', type : 'feature', value : 'auto', description : 'X11 ximages
 option('ximagesrc-xshm', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin (XSHM support)')
 option('ximagesrc-xfixes', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin (XFixes support)')
 option('ximagesrc-xdamage', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin (XDamage support)')
+option('ximagesrc-navigation', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin (Navigation support)')
 
 # v4l2 plugin options
 option('v4l2', type : 'feature', value : 'auto', description : 'Build video4linux2 source/sink plugin')

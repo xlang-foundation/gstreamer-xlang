@@ -47,58 +47,6 @@ typedef struct
   } texture;
 } VertexData;
 
-static const gchar templ_pixel_shader[] =
-    "Texture2D shaderTexture;\n"
-    "SamplerState samplerState;\n"
-    "struct PS_INPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "  float2 Texture: TEXCOORD;\n"
-    "};\n"
-    "float4 main(PS_INPUT input): SV_TARGET\n"
-    "{\n"
-    "  return shaderTexture.Sample(samplerState, input.Texture);\n"
-    "}\n";
-
-static const gchar templ_premul_pixel_shader[] =
-    "Texture2D shaderTexture;\n"
-    "SamplerState samplerState;\n"
-    "struct PS_INPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "  float2 Texture: TEXCOORD;\n"
-    "};\n"
-    "float4 main(PS_INPUT input): SV_TARGET\n"
-    "{\n"
-    "  float4 sample = shaderTexture.Sample(samplerState, input.Texture);\n"
-    "  float4 unpremul_sample;\n"
-    "  if (sample.a == 0 || sample.a == 1)\n"
-    "    return sample;\n"
-    "  unpremul_sample.r = saturate (sample.r / sample.a);\n"
-    "  unpremul_sample.g = saturate (sample.g / sample.a);\n"
-    "  unpremul_sample.b = saturate (sample.b / sample.a);\n"
-    "  unpremul_sample.a = sample.a;\n"
-    "  return unpremul_sample;\n"
-    "}\n";
-
-static const gchar templ_vertex_shader[] =
-    "struct VS_INPUT\n"
-    "{\n"
-    "  float4 Position : POSITION;\n"
-    "  float2 Texture : TEXCOORD;\n"
-    "};\n"
-    "\n"
-    "struct VS_OUTPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "  float2 Texture: TEXCOORD;\n"
-    "};\n"
-    "\n"
-    "VS_OUTPUT main(VS_INPUT input)\n"
-    "{\n"
-    "  return input;\n"
-    "}\n";
-
 struct GstD3D11CompositionOverlay
 {
   ~GstD3D11CompositionOverlay ()
@@ -132,6 +80,7 @@ struct _GstD3D11OverlayCompositorPrivate
   ComPtr<ID3D11SamplerState> sampler;
   ComPtr<ID3D11BlendState> blend;
   ComPtr<ID3D11Buffer> index_buffer;
+  ComPtr<ID3D11RasterizerState> rs;
 
   std::vector<GstD3D11CompositionOverlayPtr> overlays;
 };
@@ -379,8 +328,6 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   GstVideoInfo *info = &priv->info;
   GstD3D11Device *device = self->device;
   HRESULT hr;
-  D3D11_SAMPLER_DESC sampler_desc;
-  D3D11_INPUT_ELEMENT_DESC input_desc[2];
   D3D11_BUFFER_DESC buffer_desc;
   D3D11_BLEND_DESC blend_desc;
   D3D11_MAPPED_SUBRESOURCE map;
@@ -394,76 +341,54 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   ComPtr < ID3D11SamplerState > sampler;
   ComPtr < ID3D11BlendState > blend;
   ComPtr < ID3D11Buffer > index_buffer;
+  ComPtr < ID3D11RasterizerState > rs;
 
-  memset (&sampler_desc, 0, sizeof (sampler_desc));
-  memset (input_desc, 0, sizeof (input_desc));
   memset (&buffer_desc, 0, sizeof (buffer_desc));
   memset (&blend_desc, 0, sizeof (blend_desc));
 
   device_handle = gst_d3d11_device_get_device_handle (device);
   context_handle = gst_d3d11_device_get_device_context_handle (device);
 
-  /* bilinear filtering */
-  sampler_desc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
-  sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-  sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-  sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-  sampler_desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-  sampler_desc.MinLOD = 0;
-  sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
-
-  hr = device_handle->CreateSamplerState (&sampler_desc, &sampler);
+  hr = gst_d3d11_device_get_sampler (device,
+      D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT, &sampler);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't create sampler state, hr: 0x%x",
         (guint) hr);
     return FALSE;
   }
 
-  hr = gst_d3d11_create_pixel_shader_simple (device,
-      templ_pixel_shader, "main", &ps);
+  hr = gst_d3d11_get_pixel_shader_sample (device, &ps);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't create pixel shader");
     return FALSE;
   }
 
-  hr = gst_d3d11_create_pixel_shader_simple (device,
-      templ_premul_pixel_shader, "main", &premul_ps);
+  hr = gst_d3d11_get_pixel_shader_sample_premul (device, &premul_ps);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't create premul pixel shader");
     return FALSE;
   }
 
-  input_desc[0].SemanticName = "POSITION";
-  input_desc[0].SemanticIndex = 0;
-  input_desc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-  input_desc[0].InputSlot = 0;
-  input_desc[0].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-  input_desc[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-  input_desc[0].InstanceDataStepRate = 0;
-
-  input_desc[1].SemanticName = "TEXCOORD";
-  input_desc[1].SemanticIndex = 0;
-  input_desc[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-  input_desc[1].InputSlot = 0;
-  input_desc[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-  input_desc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-  input_desc[1].InstanceDataStepRate = 0;
-
-  hr = gst_d3d11_create_vertex_shader_simple (device, templ_vertex_shader,
-      "main", input_desc, G_N_ELEMENTS (input_desc), &vs, &layout);
+  hr = gst_d3d11_get_vertex_shader_coord (device, &vs, &layout);
   if (!gst_d3d11_result (hr, device)) {
-    GST_ERROR_OBJECT (self, "Couldn't vertex pixel shader");
+    GST_ERROR_OBJECT (self, "Couldn't create vertex pixel shader");
+    return FALSE;
+  }
+
+  hr = gst_d3d11_device_get_rasterizer (device, &rs);
+  if (!gst_d3d11_result (hr, device)) {
+    GST_ERROR_OBJECT (self, "Couldn't get rasterizer state");
     return FALSE;
   }
 
   blend_desc.AlphaToCoverageEnable = FALSE;
   blend_desc.IndependentBlendEnable = FALSE;
   blend_desc.RenderTarget[0].BlendEnable = TRUE;
-  blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+  blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
   blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
   blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
   blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-  blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+  blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
   blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
   blend_desc.RenderTarget[0].RenderTargetWriteMask =
       D3D11_COLOR_WRITE_ENABLE_ALL;
@@ -516,6 +441,7 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   priv->sampler = sampler;
   priv->blend = blend;
   priv->index_buffer = index_buffer;
+  priv->rs = rs;
 
   priv->viewport.TopLeftX = 0;
   priv->viewport.TopLeftY = 0;
@@ -695,6 +621,7 @@ gst_d3d11_overlay_compositor_draw_unlocked (GstD3D11OverlayCompositor *
   context->PSSetSamplers (0, 1, samplers);
   context->VSSetShader (priv->vs.Get (), nullptr, 0);
   context->RSSetViewports (1, &priv->viewport);
+  context->RSSetState (priv->rs.Get ());
   context->OMSetRenderTargets (1, rtv, nullptr);
   context->OMSetBlendState (priv->blend.Get (), nullptr, 0xffffffff);
 
@@ -710,7 +637,7 @@ gst_d3d11_overlay_compositor_draw_unlocked (GstD3D11OverlayCompositor *
       gst_memory_map (mem, &info, (GstMapFlags) (GST_MAP_D3D11 | GST_MAP_READ));
     }
 
-    if (overlay->premul_alpha)
+    if (!overlay->premul_alpha)
       context->PSSetShader (priv->premul_ps.Get (), nullptr, 0);
     else
       context->PSSetShader (priv->ps.Get (), nullptr, 0);

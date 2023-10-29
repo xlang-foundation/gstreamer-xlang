@@ -271,9 +271,7 @@ gst_d3d11_winrt_capture_show_border (GstD3D11ScreenCapture * capture,
 static GstFlowReturn
 gst_d3d11_winrt_capture_do_capture (GstD3D11ScreenCapture * capture,
     GstD3D11Device * device, ID3D11Texture2D * texture,
-    ID3D11RenderTargetView * rtv, ID3D11VertexShader * vs,
-    ID3D11PixelShader * ps, ID3D11InputLayout * layout,
-    ID3D11SamplerState * sampler, ID3D11BlendState * blend,
+    ID3D11RenderTargetView * rtv, ShaderResource * resource,
     D3D11_BOX * crop_box, gboolean draw_mouse);
 static gpointer
 gst_d3d11_winrt_capture_thread_func (GstD3D11WinRTCapture * self);
@@ -697,7 +695,7 @@ gst_d3d11_winrt_capture_thread_func (GstD3D11WinRTCapture * self)
 #endif
 
   winrt_vtable.SetThreadDpiAwarenessContext
-      (DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
+      (DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
 
   QueryPerformanceFrequency (&self->frequency);
 
@@ -848,9 +846,7 @@ gst_d3d11_winrt_capture_show_border (GstD3D11ScreenCapture * capture,
 static GstFlowReturn
 gst_d3d11_winrt_capture_do_capture (GstD3D11ScreenCapture * capture,
     GstD3D11Device * device, ID3D11Texture2D * texture,
-    ID3D11RenderTargetView * rtv, ID3D11VertexShader * vs,
-    ID3D11PixelShader * ps, ID3D11InputLayout * layout,
-    ID3D11SamplerState * sampler, ID3D11BlendState * blend,
+    ID3D11RenderTargetView * rtv, ShaderResource * resource,
     D3D11_BOX * crop_box, gboolean draw_mouse)
 {
   GstD3D11WinRTCapture *self = GST_D3D11_WINRT_CAPTURE (capture);
@@ -997,7 +993,7 @@ again:
     BOOL ret;
 
     prev = winrt_vtable.SetThreadDpiAwarenessContext
-        (DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
+        (DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
     ret = GetClientRect (self->window_handle, &client_rect) &&
         DwmGetWindowAttribute (self->window_handle,
         DWMWA_EXTENDED_FRAME_BOUNDS, &bound_rect, sizeof (RECT)) == S_OK &&
